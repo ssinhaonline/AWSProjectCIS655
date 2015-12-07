@@ -1,0 +1,47 @@
+#!/bin/bash
+#@author: Souradeep Sinha(ssinhaonline) and Simon Lee(s19920513)
+START=`date +%s`
+USERNAME=ubuntu								#change the username according to your AMI volume
+#INSTANCES=("$@")
+INSTANCE=$1								#command line input for the InstanceID
+SCRIPT="pwd; ls"
+#for INSTANCE in ${INSTANCES} ; do
+#	aws ec2 start-instances --instance-ids ${INSTANCE}
+#done
+
+aws ec2 start-instances --instance-ids ${INSTANCE}			#start the instance
+
+echo "Starting instance. Please Wait..."
+
+CURR_STAT_MSG=`aws ec2 describe-instances --instance-ids ${INSTANCE} --query '(Reservations[].Instances[].State.Name)[0]'`
+CURR_STAT_CODE=`aws ec2 describe-instances --instance-ids ${INSTANCE} --query '(Reservations[].Instances[].State.Code)[0]'`
+
+PRNT_STRNG="Current state: "
+
+echo $PRNT_STRNG$CURR_STAT_MSG
+
+while [ $CURR_STAT_CODE -ne 16 ]; do					#wait until the instance is running (Status Code for running is 16)
+	CURR_STAT_MSG=`aws ec2 describe-instances --instance-ids ${INSTANCE} --query '(Reservations[].Instances[].State.Name)[0]'`
+	CURR_STAT_CODE=`aws ec2 describe-instances --instance-ids ${INSTANCE} --query '(Reservations[].Instances[].State.Code)[0]'`
+	
+	#echo $PRNT_STRNG$CURR_STAT_MSG
+	sleep 1
+done
+
+PRNT_STRNG="Current state changed to: "
+
+CURR_STAT_MSG=`aws ec2 describe-instances --instance-ids ${INSTANCE} --query '(Reservations[].Instances[].State.Name)[0]'`
+CURR_STAT_CODE=`aws ec2 describe-instances --instance-ids ${INSTANCE} --query '(Reservations[].Instances[].State.Code)[0]'`
+
+echo $PRNT_STRNG$CURR_STAT_MSG
+
+HOSTNAME=`aws ec2 describe-instances --instance-ids ${INSTANCE} --query '(Reservations[].Instances[].PublicDnsName)[0]'`			#get the hostname of the instance started
+HN_LEN=`expr length $HOSTNAME`
+HN_NEW_LEN=`expr $HN_LEN - 2`
+
+FULL_ADDRESS=$USERNAME@${HOSTNAME:1:$HN_NEW_LEN}
+END=`date +%s`
+RUNTIME=$((END-START))
+PRNT_STRNG="Time to start instance = "
+echo $PRNT_STRNG$RUNTIME
+ssh -i ./LeeSinha.pem ${FULL_ADDRESS}					#ssh into the machine. Type 'yes' when prompted for authentication

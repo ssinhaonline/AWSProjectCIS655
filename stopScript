@@ -1,0 +1,8 @@
+#!/bin/bash
+USERNAME=ubuntu
+INSTANCES=("$@")
+SCRIPT="pwd; ls"
+for INSTANCE in ${INSTANCES} ; do
+	aws ec2 stop-instances --instance-ids ${INSTANCE}
+done
+

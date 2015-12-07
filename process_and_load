@@ -1,0 +1,19 @@
+#!/bin/bash
+#@author: Souradeep Sinha(ssinhaonline) and Simon Lee(s19920513)
+START=`date +%s`
+INSTANCE=$1								#command line input for the InstanceID
+
+echo "Starting preProcessor.py on smallfoods.txt ..."
+python preProcessor.py
+echo "Data file has been processed. JSON file generated at out.json"
+
+echo "Starting to load JSON file into DynamoDB table."
+echo "Starting dynamoDBdriver.py on out.json ..."
+python dynamoDBdriver.py
+echo "Data has been loaded into DynamoDB Table: Reviews"
+
+COMMASTRING=" , "
+
+END=`date +%s`
+RUNTIME=$((END-START))
+echo "$INSTANCE$COMMASTRING$RUNTIME" >> "timeanalysis.txt"
